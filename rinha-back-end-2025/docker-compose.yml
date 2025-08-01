@@ -15,17 +15,20 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.20"
-          memory: "20MB"
+          cpus: "0.10"
+          memory: "15MB"
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3
     networks:
       - rinha-network
-    ports:
-      - "15672:15672"   # Porta da interface web
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    deploy:
+      resources:
+        limits:
+          cpus: "0.35"
+          memory: "100MB"
 
   db_postgres:
     image: postgres:16-alpine
@@ -51,6 +54,20 @@ services:
       - rabbitmq
     networks:
       - rinha-network
+      - payment-processor
+    environment:
+      - DB_USER=postgres
+      - DB_HOST=db-rinha-postgres
+      - DB_DATABASE=rinha
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      - BASE_URL_DEFAULT=http://payment-processor-default:8080
+      - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "80MB"
 
   api1: &api
     build: .
@@ -63,19 +80,16 @@ services:
       - DB_PASSWORD=postgres
       - DB_PORT=5432
       - PORT=3000
-      - BASE_URL_DEFAULT=http://payment-processor-default:8080
-      - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
     depends_on:
       - db_postgres
       - rabbitmq
     networks:
       - rinha-network
-      - payment-processor
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "95MB"
+          cpus: "0.225"
+          memory: "27.5MB"
   api2:
     <<: *api
     hostname: api2

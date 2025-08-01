@@ -1,14 +1,14 @@
 // worker.ts
 import amqplib from 'amqplib';
+import { ProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
-const CONCURRENCY = 100;
+const CONCURRENCY = 50;
 
 
-async function connectWithRetry(retries = 5, delay = 3000){
+async function connectWithRetry(retries = 5, delay = 3500){
   while (retries > 0) {
     try {
-      console.log(`Tentando conectar ao RabbitMQ... (${6 - retries}/5)`);
       const conn = await amqplib.connect('amqp://rabbitmq');
       console.log("✅ Conectado ao RabbitMQ");
       return conn;
@@ -25,6 +25,7 @@ async function consume() {
   const conn = await connectWithRetry();
   const channel = await conn.createChannel();
   await channel.assertQueue(QUEUE, { durable: true });
+  const processService = new ProcessService()
 
   channel.prefetch(CONCURRENCY);
 
@@ -33,12 +34,12 @@ async function consume() {
       const content = JSON.parse(payment.content.toString());
 
       try {
-        setTimeout(() => {
-          console.log('Processado:', content);
-          channel.ack(payment); // Confirma que a mensagem foi processada
-        }, 1500); 
-      } catch (error) {
-        console.error('Erro ao processar:', error);
+
+        await processService.payments(content)
+        console.log('Processado:', content);
+        channel.ack(payment); // Confirma processamento
+      } catch (error:any) {
+        console.error('Erro ao processar:', error.message);
       }
     }
   }, { noAck: false });
