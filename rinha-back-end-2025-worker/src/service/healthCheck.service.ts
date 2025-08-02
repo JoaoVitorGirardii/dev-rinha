@@ -34,8 +34,8 @@ export async function healthCheckService() {
             return {process: 'DEFAULT', timeout: hc_default.minResponseTime}
         }
 
-        //USA O FALLBACK SE O TEMPO DO MESMO FOR MENOR
-        const fallback_menor_tempo = hc_fallback.minResponseTime < hc_default.minResponseTime
+        //USA O FALLBACK SE O TEMPO DO DEFAULT FOR MAIOR (110ms de tolerancia default é mais lucrativo)
+        const fallback_menor_tempo = hc_fallback.minResponseTime < hc_default.minResponseTime + 110
         if (hc_default.failing && hc_fallback.failing && fallback_menor_tempo){
             return {process: 'FALLBACK', timeout: hc_fallback.minResponseTime}
         }
@@ -62,10 +62,10 @@ export async function healthCheckService() {
 
 export async function getHealthCheck() {
     const healthRedis = await redis.lIndex(HEALTH, 0) // primeiro da esquerda
-    const paymentDefault = new PaymentsProcessorDefault()
-    const paymentFallback = new PaymentsProcessorFallback()
-
+    
     if (healthRedis){
+        const paymentDefault = new PaymentsProcessorDefault()
+        const paymentFallback = new PaymentsProcessorFallback()
 
         const healthParsed = JSON.parse(healthRedis) as HealthCheckDto
         

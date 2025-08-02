@@ -2,11 +2,11 @@
 
 import { PaymentDto } from './dto/payment.dto';
 import redis from './redis/redisClient';
-import { getHealthCheck, getHealthCheckDefault } from './service/healthCheck.service';
+import { getHealthCheck } from './service/healthCheck.service';
 import { ProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
-const CONCURRENCY = 45;
+const CONCURRENCY = 32;
 
 async function processOneWorker(id: number){
   const processService = new ProcessService()
@@ -38,14 +38,14 @@ async function startWorkers() {
   const consultaHealth = Number(process.env.HEALTH_CHECK)
   
   if (consultaHealth === 1){
-    getHealthCheckDefault()
+
     setInterval(async () => {
       try {
-        getHealthCheck();      
+        await getHealthCheck();      
       } catch (err) {
         console.error('[Erro no getHealthCheck()]', err);
       }
-    }, 5005);
+    }, 4000); //4s
   }
 
 }

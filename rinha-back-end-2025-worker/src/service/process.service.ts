@@ -24,13 +24,13 @@ export class ProcessService {
 
             if (process === 'DEFAULT') {
                 await paymentsProcessorDefault.payments(payloadProcessor, timeout);
-                this.paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
+                await this.paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
                 return
             }
 
             if (process === 'FALLBACK' ) {
                 await paymentsProcessorFallback.payments(payloadProcessor, timeout);
-                this.paymentProcessed({ ...payloadProcessor, type: 'FALLBACK' });
+                await this.paymentProcessed({ ...payloadProcessor, type: 'FALLBACK' });
                 return
             }
 
