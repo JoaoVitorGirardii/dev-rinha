@@ -26,7 +26,7 @@ services:
       resources:
         limits:
           cpus: "0.20"
-          memory: "30MB"
+          memory: "10MB"
 
   db_postgres:
     image: postgres:16-alpine
@@ -49,7 +49,7 @@ services:
       resources:
         limits:
           cpus: "0.30"
-          memory: "95MB"
+          memory: "90MB"
 
   apiworker1: &apiworker
     build: ../rinha-back-end-2025-worker
@@ -72,7 +72,7 @@ services:
       resources:
         limits:
           cpus: "0.15"
-          memory: "40MB"
+          memory: "46MB"
 
   apiworker2: 
     <<: *apiworker
@@ -98,17 +98,6 @@ services:
       - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
       - HEALTH_CHECK=0
 
-  apiworker4: 
-    <<: *apiworker
-    environment:
-      - DB_USER=postgres
-      - DB_HOST=db_postgres
-      - DB_DATABASE=rinha
-      - DB_PASSWORD=postgres
-      - DB_PORT=5432
-      - BASE_URL_DEFAULT=http://payment-processor-default:8080
-      - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
-      - HEALTH_CHECK=0
 
   api1: &api
     build: .

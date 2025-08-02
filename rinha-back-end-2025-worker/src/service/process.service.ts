@@ -45,11 +45,11 @@ export class ProcessService {
 
     private async paymentProcessed(payment: PaymentProcessorDto & { type: string }){
 
-        const result = await Database.query(
+        Database.query(
             `INSERT INTO public.payments (correlationId, amount, "type", requested_at) 
              VALUES('${payment.correlationId}', ${payment.amount}, '${payment.type}', '${new Date(payment.requestedAt).toISOString()}')`
         );
 
-        return result
+        return
     }
 }
