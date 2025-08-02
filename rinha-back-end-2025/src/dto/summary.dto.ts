@@ -1,4 +1,4 @@
 export class SummaryPaymentDto {
-    public from: Date
-    public to: Date
+    public from?: string
+    public to?: string
 }

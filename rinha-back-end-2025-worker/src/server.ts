@@ -1,52 +1,59 @@
 // worker.ts
-import amqplib from 'amqplib';
+
+import { PaymentDto } from './dto/payment.dto';
+import redis from './redis/redisClient';
+import { getHealthCheck, getHealthCheckDefault } from './service/healthCheck.service';
 import { ProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
-const CONCURRENCY = 50;
+const CONCURRENCY = 45;
 
 
-async function connectWithRetry(retries = 5, delay = 3500){
-  while (retries > 0) {
-    try {
-      const conn = await amqplib.connect('amqp://rabbitmq');
-      console.log("✅ Conectado ao RabbitMQ");
-      return conn;
-    } catch (err) {
-      console.error("❌ Falha ao conectar. Tentando novamente em 3s...");
-      retries--;
-      await new Promise(res => setTimeout(res, delay));
+
+async function processOneWorker(id: number){
+  const processService = new ProcessService()
+  while (true) {
+    try{
+      const payment = await redis.brPop(QUEUE, 0)
+      if (payment) {
+        // console.log(`PAYMENT WITH WORKER [${id}]: `, payment)
+        const { element } = payment
+        if (!element) {
+          console.warn(`não processou esse: PAYMENT WITH WORKER [${id}]: `, payment)
+          return 
+        }
+        const paymentParsed = JSON.parse(element) as PaymentDto
+        await processService.payments(paymentParsed)
+        //console.log('Processado:', paymentParsed);
+      }
+    }catch(error) {
+      console.error(`ERRO worker id = ${id}: `, error)
     }
   }
-  throw new Error("❌ Não foi possível conectar ao RabbitMQ após múltiplas tentativas.");
 }
 
-async function consume() {
-  const conn = await connectWithRetry();
-  const channel = await conn.createChannel();
-  await channel.assertQueue(QUEUE, { durable: true });
-  const processService = new ProcessService()
-
-  channel.prefetch(CONCURRENCY);
-
-  channel.consume(QUEUE, async (payment) => {
-    if (payment) {
-      const content = JSON.parse(payment.content.toString());
-
+async function startWorkers() {
+  
+  for (let i = 1; i <= CONCURRENCY; i++) {
+    processOneWorker(i);
+  }
+  
+  const consultaHealth = Number(process.env.HEALTH_CHECK)
+  
+  if (consultaHealth === 1){
+    getHealthCheckDefault()
+    setInterval(async () => {
       try {
-
-        await processService.payments(content)
-        console.log('Processado:', content);
-        channel.ack(payment); // Confirma processamento
-      } catch (error:any) {
-        console.error('Erro ao processar:', error.message);
+        getHealthCheck();      
+      } catch (err) {
+        console.error('[Erro no getHealthCheck()]', err);
       }
-    }
-  }, { noAck: false });
+    }, 5005);
+  }
 }
 
-consume().catch((err) => {
-  console.error('Erro ao consumir fila:', err);
+startWorkers().catch((err) => {
+  console.error("Erro ao processar fila.")
   process.exit(1);
 });
 

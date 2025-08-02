@@ -16,23 +16,20 @@ services:
       resources:
         limits:
           cpus: "0.10"
-          memory: "15MB"
-  rabbitmq:
-    image: rabbitmq:3
+          memory: "12.5MB"
+  redis:
+    image: redis:alpine
     networks:
       - rinha-network
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
     deploy:
       resources:
         limits:
-          cpus: "0.35"
-          memory: "100MB"
+          cpus: "0.20"
+          memory: "28.5MB"
 
   db_postgres:
     image: postgres:16-alpine
-    container_name: db-rinha-postgres
+    container_name: db_postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -45,29 +42,54 @@ services:
       resources:
         limits:
           cpus: "0.30"
-          memory: "40MB"
+          memory: "100MB"
 
-  apiworker:
+  apiworker1: &apiworker
     build: ../rinha-back-end-2025-worker
     hostname: apiworker
     depends_on:
-      - rabbitmq
+      - redis
     networks:
       - rinha-network
       - payment-processor
     environment:
       - DB_USER=postgres
-      - DB_HOST=db-rinha-postgres
+      - DB_HOST=db_postgres
       - DB_DATABASE=rinha
       - DB_PASSWORD=postgres
       - DB_PORT=5432
       - BASE_URL_DEFAULT=http://payment-processor-default:8080
       - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
+      - HEALTH_CHECK=1
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "80MB"
+          cpus: "0.15"
+          memory: "50MB"
+
+  apiworker2: 
+    <<: *apiworker
+    environment:
+      - DB_USER=postgres
+      - DB_HOST=db_postgres
+      - DB_DATABASE=rinha
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      - BASE_URL_DEFAULT=http://payment-processor-default:8080
+      - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
+      - HEALTH_CHECK=0
+
+  apiworker3: 
+    <<: *apiworker
+    environment:
+      - DB_USER=postgres
+      - DB_HOST=db_postgres
+      - DB_DATABASE=rinha
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      - BASE_URL_DEFAULT=http://payment-processor-default:8080
+      - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
+      - HEALTH_CHECK=0
 
   api1: &api
     build: .
@@ -75,21 +97,21 @@ services:
     hostname: api1
     environment:
       - DB_USER=postgres
-      - DB_HOST=db-rinha-postgres
+      - DB_HOST=db_postgres
       - DB_DATABASE=rinha
       - DB_PASSWORD=postgres
       - DB_PORT=5432
       - PORT=3000
     depends_on:
       - db_postgres
-      - rabbitmq
+      - redis
     networks:
       - rinha-network
     deploy:
       resources:
         limits:
           cpus: "0.225"
-          memory: "27.5MB"
+          memory: "30MB"
   api2:
     <<: *api
     hostname: api2

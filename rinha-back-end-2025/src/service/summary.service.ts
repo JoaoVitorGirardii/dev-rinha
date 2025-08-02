@@ -8,7 +8,7 @@ export class SummaryService {
     
         let filter = ''
         if (payload.from && payload.to) {
-            filter = `WHERE requested_at BETWEEN '${new Date(payload.from).toISOString()}' AND '${new Date(payload.to).toISOString()}'`
+            filter = `WHERE requested_at BETWEEN '${payload.from}' AND '${payload.to}'`
         }
 
         const result = await Database.query(
@@ -23,12 +23,12 @@ export class SummaryService {
     
         const summary = {
             "default" : {
-                "totalRequests": result.rows[0].totalRequestsDefault,
-                "totalAmount": result.rows[0].totalAmountDefault
+                "totalRequests": Number(result.rows[0].totalRequestsDefault ?? 0),
+                "totalAmount": Number(result.rows[0].totalAmountDefault ?? 0)
             },
             "fallback" : {
-                "totalRequests": result.rows[0].totalRequestsFallback,
-                "totalAmount": result.rows[0].totalAmountFallback
+                "totalRequests": Number(result.rows[0].totalRequestsFallback ?? 0),
+                "totalAmount": Number(result.rows[0].totalAmountFallback ?? 0)
             }
         }
         return summary;
