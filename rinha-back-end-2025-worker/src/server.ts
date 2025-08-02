@@ -8,15 +8,12 @@ import { ProcessService } from './service/process.service';
 const QUEUE = 'payments';
 const CONCURRENCY = 45;
 
-
-
 async function processOneWorker(id: number){
   const processService = new ProcessService()
   while (true) {
     try{
       const payment = await redis.brPop(QUEUE, 0)
       if (payment) {
-        // console.log(`PAYMENT WITH WORKER [${id}]: `, payment)
         const { element } = payment
         if (!element) {
           console.warn(`não processou esse: PAYMENT WITH WORKER [${id}]: `, payment)
@@ -50,10 +47,10 @@ async function startWorkers() {
       }
     }, 5005);
   }
+
 }
 
 startWorkers().catch((err) => {
   console.error("Erro ao processar fila.")
   process.exit(1);
 });
-

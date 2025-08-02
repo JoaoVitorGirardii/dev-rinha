@@ -19,13 +19,14 @@ services:
           memory: "12.5MB"
   redis:
     image: redis:alpine
+    command: redis-server --save "" --appendonly no --maxmemory 29mb 
     networks:
       - rinha-network
     deploy:
       resources:
         limits:
           cpus: "0.20"
-          memory: "28.5MB"
+          memory: "30MB"
 
   db_postgres:
     image: postgres:16-alpine
@@ -65,7 +66,7 @@ services:
       resources:
         limits:
           cpus: "0.15"
-          memory: "50MB"
+          memory: "51.2MB"
 
   apiworker2: 
     <<: *apiworker
