@@ -1,22 +1,23 @@
 import dotenv from 'dotenv';
 
-import express from 'express';
+import fastify from 'fastify';
 import { PaymentDto } from './dto/payment.dto';
 import { PaymentsService } from './service/payments.service';
 import { SummaryService } from './service/summary.service';
 
 dotenv.config();
 
-const app = express();
-const port = process.env.PORT ?? 3000;
-
-app.use(express.json());
+const app = fastify({
+  logger: false,
+  disableRequestLogging: true,
+  ignoreTrailingSlash: true
+})
 
 app.post('/payments', async (req, res) => {
   const payments = new PaymentsService()
   const payload = req.body as PaymentDto
   await payments.payments(payload)
-  res.sendStatus(200)
+  res.status(200).send()
 })
 
 app.get('/payments-summary', async(req, res) => {
@@ -26,19 +27,24 @@ app.get('/payments-summary', async(req, res) => {
     from: payload.from,
     to: payload.to
   })
-  res.json(summary)
+  res.status(200).send(summary)
 })
 
 app.post('/purge-payments', async(req, res) => {
   const payments = new PaymentsService()
   await payments.purgePayments()
-  res.sendStatus(200)
+  res.status(200).send()
 })
 
 app.get('/', (req, res) => {
-  res.send('server run');
+  res.status(200).send()
 });
 
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
-});
+const start = async () => {
+  await app.listen({port: 3000, host: '0.0.0.0'})
+}
+
+if (require.main === module){
+  start()
+}
+
