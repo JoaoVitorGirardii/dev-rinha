@@ -4,7 +4,7 @@ import { getHealthCheck } from './service/healthCheck.service';
 import { ProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
-const CONCURRENCY = 8;
+const CONCURRENCY = 10;
 
 async function processOneWorker(id: number){
   const processService = new ProcessService()
@@ -15,10 +15,8 @@ async function processOneWorker(id: number){
 
       if (payment) {
         const [ _, element ] = payment
-        if (!element) {
-          // console.warn(`não processou esse: PAYMENT WITH WORKER [${id}]: `, payment)
-          return 
-        }
+        if (!element) return 
+        
         const paymentParsed = JSON.parse(element) as PaymentDto
 
         await processService.payments(paymentParsed)
