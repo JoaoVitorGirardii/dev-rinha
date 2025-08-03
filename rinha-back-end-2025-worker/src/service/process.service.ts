@@ -23,18 +23,31 @@ export class ProcessService {
         try {
 
             if (process === 'DEFAULT') {
-                await paymentsProcessorDefault.payments(payloadProcessor, timeout);
-                await this.paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
+                const ok = await paymentsProcessorDefault.payments(payloadProcessor, timeout);
+                
+                if (!ok) {
+                    await redis.lpush(QUEUE, JSON.stringify(payload))
+                }else{
+                    await this.paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
+                }
+                
                 return
             }
 
             if (process === 'FALLBACK' ) {
-                await paymentsProcessorFallback.payments(payloadProcessor, timeout);
-                await this.paymentProcessed({ ...payloadProcessor, type: 'FALLBACK' });
+                const ok = await paymentsProcessorFallback.payments(payloadProcessor, timeout);
+
+                if (!ok) {
+                    await redis.lpush(QUEUE, JSON.stringify(payload))
+                }else{
+                    await this.paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
+                }
+
                 return
             }
 
         } catch (error: any) {
+            console.log("não processou: ", payload)
             await redis.lpush(QUEUE, JSON.stringify(payload))
             return
             
