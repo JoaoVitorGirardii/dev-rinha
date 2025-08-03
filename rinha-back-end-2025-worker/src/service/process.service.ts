@@ -47,7 +47,6 @@ export class ProcessService {
             }
 
         } catch (error: any) {
-            console.log("não processou: ", payload)
             await redis.lpush(QUEUE, JSON.stringify(payload))
             return
             

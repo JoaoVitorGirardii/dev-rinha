@@ -87,7 +87,6 @@ export async function getHealthCheck() {
                 }))
             }else {
                 const newHc = {...healthParsed, time: new Date()}
-                console.log("Segundo IF: ", newHc)
                 await redis.lpush(HEALTH, JSON.stringify(newHc))
             }
 

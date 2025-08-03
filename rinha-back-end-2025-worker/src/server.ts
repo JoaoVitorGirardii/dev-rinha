@@ -1,22 +1,22 @@
-// worker.ts
-
 import { PaymentDto } from './dto/payment.dto';
 import redis from './redis/redisClient';
 import { getHealthCheck } from './service/healthCheck.service';
 import { ProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
-const CONCURRENCY = 11;
+const CONCURRENCY = 8;
 
 async function processOneWorker(id: number){
   const processService = new ProcessService()
   while (true) {
     try{
+
       const payment = await redis.brpop(QUEUE, 0)
+
       if (payment) {
         const [ _, element ] = payment
         if (!element) {
-          console.warn(`não processou esse: PAYMENT WITH WORKER [${id}]: `, payment)
+          // console.warn(`não processou esse: PAYMENT WITH WORKER [${id}]: `, payment)
           return 
         }
         const paymentParsed = JSON.parse(element) as PaymentDto

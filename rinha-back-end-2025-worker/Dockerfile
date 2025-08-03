@@ -22,4 +22,4 @@ COPY --from=builder_worker /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["node", "--no-deprecation", "--optimize_for_size", "--max_old_space_size=512", "dist/server.js"]
