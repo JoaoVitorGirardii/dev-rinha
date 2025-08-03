@@ -6,7 +6,7 @@ import { getHealthCheck } from './service/healthCheck.service';
 import { ProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
-const CONCURRENCY = 37;
+const CONCURRENCY = 11;
 
 async function processOneWorker(id: number){
   const processService = new ProcessService()
@@ -20,8 +20,8 @@ async function processOneWorker(id: number){
           return 
         }
         const paymentParsed = JSON.parse(element) as PaymentDto
+
         await processService.payments(paymentParsed)
-        //console.log('Processado:', paymentParsed);
       }
     }catch(error) {
       console.error(`ERRO worker id = ${id}: `, error)
@@ -31,10 +31,13 @@ async function processOneWorker(id: number){
 
 async function startWorkers() {
   
+  let workers = []
   for (let i = 1; i <= CONCURRENCY; i++) {
-    processOneWorker(i);
+    workers.push(processOneWorker(i))
   }
   
+  await Promise.all(workers)
+
   const consultaHealth = Number(process.env.HEALTH_CHECK)
   
   if (consultaHealth === 1){
@@ -45,7 +48,7 @@ async function startWorkers() {
       } catch (err) {
         console.error('[Erro no getHealthCheck()]', err);
       }
-    }, 4000); //4s
+    }, 4000); //1s
   }
 
 }

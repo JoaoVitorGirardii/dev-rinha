@@ -25,7 +25,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.20"
+          cpus: "0.14"
           memory: "10MB"
 
   db_postgres:
@@ -48,7 +48,7 @@ services:
         window: 5s
       resources:
         limits:
-          cpus: "0.30"
+          cpus: "0.25"
           memory: "90MB"
 
   apiworker1: &apiworker
@@ -71,8 +71,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.15"
-          memory: "46MB"
+          cpus: "0.112"
+          memory: "32MB"
 
   apiworker2: 
     <<: *apiworker
@@ -99,6 +99,18 @@ services:
       - HEALTH_CHECK=0
 
   apiworker4: 
+    <<: *apiworker
+    environment:
+      - DB_USER=postgres
+      - DB_HOST=db_postgres
+      - DB_DATABASE=rinha
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      - BASE_URL_DEFAULT=http://payment-processor-default:8080
+      - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
+      - HEALTH_CHECK=0
+  
+  apiworker5: 
     <<: *apiworker
     environment:
       - DB_USER=postgres

@@ -16,7 +16,7 @@ export class ProcessService {
         const { process, timeout } = await healthCheckService()
 
         if (process === 'NEXT'){
-            redis.lpush(QUEUE, Buffer.from(JSON.stringify(payload)))
+            redis.lpush(QUEUE, JSON.stringify(payload))
             return
         }
 
@@ -35,7 +35,7 @@ export class ProcessService {
             }
 
         } catch (error: any) {
-            await redis.lpush(QUEUE, Buffer.from(JSON.stringify(payload)))
+            await redis.lpush(QUEUE, JSON.stringify(payload))
             return
             
         }
