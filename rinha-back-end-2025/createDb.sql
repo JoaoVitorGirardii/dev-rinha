@@ -6,3 +6,4 @@ CREATE UNLOGGED TABLE payments (
 );
 
 CREATE INDEX payments_requested_at ON payments (requested_at);
+CREATE INDEX idx_payments_type_requested_at ON payments (type, requested_at);
