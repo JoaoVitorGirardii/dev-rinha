@@ -1,10 +1,12 @@
-import { createClient } from "redis";
-const redis = createClient({
-        url: 'redis://redis:6379'
+import Redis from "ioredis";
+const redis = new Redis({
+        host: 'redis',
+        port: 6379
 })
+
+redis.on('connect', () => console.error('Redis client SUCCESS: '));
 
 redis.on('error', (err) => console.error('Redis client Error: ', err));
 
-redis.connect();
 
 export default redis;

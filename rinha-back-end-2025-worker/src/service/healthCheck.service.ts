@@ -16,7 +16,7 @@ interface HealthCheckDto {
 const HEALTH = 'HEALTH'
 
 export async function healthCheckService() {
-    const healthRedis = await redis.lIndex(HEALTH, 0) // primeiro da esquerda
+    const healthRedis = await redis.lindex(HEALTH, 0) // primeiro da esquerda
     
     if (healthRedis) {
         const healthParsed = JSON.parse(healthRedis) as HealthCheckDto
@@ -61,7 +61,7 @@ export async function healthCheckService() {
 }
 
 export async function getHealthCheck() {
-    const healthRedis = await redis.lIndex(HEALTH, 0) // primeiro da esquerda
+    const healthRedis = await redis.lindex(HEALTH, 0) // primeiro da esquerda
     
     if (healthRedis){
         const paymentDefault = new PaymentsProcessorDefault()
@@ -80,7 +80,7 @@ export async function getHealthCheck() {
             const [hc_default, hc_fallback] = await Promise.all([hc_default_promise, hc_fallback_promise])
             
             if (hc_default !== null && hc_fallback !== null) {
-                await redis.lPush(HEALTH,JSON.stringify({
+                await redis.lpush(HEALTH,JSON.stringify({
                     hc_default,
                     hc_fallback,
                     time: new Date()
@@ -88,7 +88,7 @@ export async function getHealthCheck() {
             }else {
                 const newHc = {...healthParsed, time: new Date()}
                 console.log("Segundo IF: ", newHc)
-                await redis.lPush(HEALTH, JSON.stringify(newHc))
+                await redis.lpush(HEALTH, JSON.stringify(newHc))
             }
 
         }
@@ -111,5 +111,5 @@ export async function getHealthCheckDefault() {
         },
         time: new Date()
     } as HealthCheckDto
-    await redis.lPush(HEALTH,JSON.stringify(health))
+    await redis.lpush(HEALTH,JSON.stringify(health))
 }

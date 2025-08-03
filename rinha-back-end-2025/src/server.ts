@@ -13,6 +13,15 @@ const app = fastify({
   ignoreTrailingSlash: true
 })
 
+app.addContentTypeParser('application/json', {parseAs: 'string'}, (req, body, done) => {
+  try {
+    const json = body ? JSON.parse(body.toString()) : {}
+    done(null,json)
+  } catch (error: any) {
+    done(error, undefined)
+  }
+})
+
 app.post('/payments', async (req, res) => {
   const payments = new PaymentsService()
   const payload = req.body as PaymentDto
@@ -41,10 +50,11 @@ app.get('/', (req, res) => {
 });
 
 const start = async () => {
-  await app.listen({port: 3000, host: '0.0.0.0'})
+  const port = Number(process.env.PORT) ?? 3000
+  await app.listen({port, host: '0.0.0.0'})
 }
 
-if (require.main === module){
+if (require.main?.filename === module.filename){
   start()
 }
 

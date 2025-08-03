@@ -6,15 +6,15 @@ import { getHealthCheck } from './service/healthCheck.service';
 import { ProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
-const CONCURRENCY = 32;
+const CONCURRENCY = 37;
 
 async function processOneWorker(id: number){
   const processService = new ProcessService()
   while (true) {
     try{
-      const payment = await redis.brPop(QUEUE, 0)
+      const payment = await redis.brpop(QUEUE, 0)
       if (payment) {
-        const { element } = payment
+        const [ _, element ] = payment
         if (!element) {
           console.warn(`não processou esse: PAYMENT WITH WORKER [${id}]: `, payment)
           return 

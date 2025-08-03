@@ -19,7 +19,7 @@ services:
           memory: "10MB"
   redis:
     image: redis:alpine
-    command: redis-server --save "" --appendonly no --maxmemory 29mb 
+    command: redis-server --save "" --appendonly no --maxmemory 10mb 
     networks:
       - rinha-network
     deploy:
@@ -98,6 +98,17 @@ services:
       - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
       - HEALTH_CHECK=0
 
+  apiworker4: 
+    <<: *apiworker
+    environment:
+      - DB_USER=postgres
+      - DB_HOST=db_postgres
+      - DB_DATABASE=rinha
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      - BASE_URL_DEFAULT=http://payment-processor-default:8080
+      - BASE_URL_FALLBACK=http://payment-processor-fallback:8080
+      - HEALTH_CHECK=0
 
   api1: &api
     build: .
