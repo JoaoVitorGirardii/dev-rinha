@@ -1,38 +1,33 @@
 import dotenv from 'dotenv';
 
-import fastify from 'fastify';
-import { PaymentDto } from './dto/payment.dto';
-import { PaymentsService } from './service/payments.service';
-import { SummaryService } from './service/summary.service';
+import Fastify from 'fastify';
+import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
+import { queuePayments } from './producer/producer';
+import { purgePayments } from './service/payments.service';
+import { paymentsDbSumary } from './service/summary.service';
 
 dotenv.config();
 
-const app = fastify({
+const app = Fastify({
   logger: false,
   disableRequestLogging: true,
-  ignoreTrailingSlash: true
-})
+  ignoreTrailingSlash: true,
+  trustProxy: true,
+  caseSensitive: false,
+  useSemicolonDelimiter: false
+}).withTypeProvider<ZodTypeProvider>();
 
-app.addContentTypeParser('application/json', {parseAs: 'string'}, (req, body, done) => {
-  try {
-    const json = body ? JSON.parse(body.toString()) : {}
-    done(null,json)
-  } catch (error: any) {
-    done(error, undefined)
-  }
-})
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
 
 app.post('/payments', async (req, res) => {
-  const payments = new PaymentsService()
-  const payload = req.body as PaymentDto
-  await payments.payments(payload)
+  await queuePayments(req.body)
   res.status(200).send()
 })
 
 app.get('/payments-summary', async(req, res) => {
-  const payments = new SummaryService()
   const payload = req.query as any
-  const summary = await payments.payments({
+  const summary = await paymentsDbSumary({
     from: payload.from,
     to: payload.to
   })
@@ -40,14 +35,9 @@ app.get('/payments-summary', async(req, res) => {
 })
 
 app.post('/purge-payments', async(req, res) => {
-  const payments = new PaymentsService()
-  await payments.purgePayments()
+  await purgePayments()
   res.status(200).send()
 })
-
-app.get('/', (req, res) => {
-  res.status(200).send()
-});
 
 const start = async () => {
   const port = Number(process.env.PORT) ?? 3000
