@@ -1,13 +1,12 @@
 import { PaymentDto } from './dto/payment.dto';
 import redis from './redis/redisClient';
 import { getHealthCheck } from './service/healthCheck.service';
-import { ProcessService } from './service/process.service';
+import { paymentsProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
 const CONCURRENCY = 10;
 
 async function processOneWorker(id: number){
-  const processService = new ProcessService()
   while (true) {
     try{
 
@@ -19,7 +18,7 @@ async function processOneWorker(id: number){
         
         const paymentParsed = JSON.parse(element) as PaymentDto
 
-        await processService.payments(paymentParsed)
+        await paymentsProcessService(paymentParsed)
       }
     }catch(error) {
       console.error(`ERRO worker id = ${id}: `, error)
