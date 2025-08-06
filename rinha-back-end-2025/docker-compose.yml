@@ -15,8 +15,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.10"
-          memory: "10MB"
+          cpus: "0.15"
+          memory: "20MB"
   redis:
     image: redis:alpine
     command: redis-server --save "" --appendonly no --maxmemory 10mb 
@@ -26,7 +26,7 @@ services:
       resources:
         limits:
           cpus: "0.14"
-          memory: "10MB"
+          memory: "11MB"
 
   db_postgres:
     image: postgres:16-alpine
@@ -49,7 +49,7 @@ services:
       resources:
         limits:
           cpus: "0.25"
-          memory: "94MB"
+          memory: "100MB"
 
   apiworker1: &apiworker
     build: ../rinha-back-end-2025-worker
@@ -71,8 +71,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.093"
-          memory: "27.66MB"
+          cpus: "0.07"
+          memory: "23MB"
 
   apiworker2: 
     <<: *apiworker
@@ -153,11 +153,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.225"
-          memory: "25MB"
+          cpus: "0.18"
+          memory: "27MB"
   api2:
     <<: *api
     hostname: api2
+
+  api3:
+    <<: *api
+    hostname: api3
 
 networks:
   rinha-network:

@@ -14,13 +14,12 @@ interface HealthCheckDto {
     time: Date
 }
 const HEALTH = 'HEALTH'
+const BEST_SERVICE = 'BEST_SERVICE'
 
-export async function healthCheckService() {
-    const healthRedis = await redis.lindex(HEALTH, 0) // primeiro da esquerda
+function healthCheckService(healthServices: Omit<HealthCheckDto,'time'>) {
     
-    if (healthRedis) {
-        const healthParsed = JSON.parse(healthRedis) as HealthCheckDto
-        const { hc_default, hc_fallback } = healthParsed
+    if (healthServices) {
+        const { hc_default, hc_fallback } = healthServices
        
 
         //se o DEFAULT e FALLBACK estiver falha
@@ -63,6 +62,8 @@ export async function healthCheckService() {
 export async function getHealthCheck() {
     const healthRedis = await redis.lindex(HEALTH, 0) // primeiro da esquerda
     
+    const pipeline = redis.pipeline()
+
     if (healthRedis){
         const paymentDefault = new PaymentsProcessorDefault()
         const paymentFallback = new PaymentsProcessorFallback()
@@ -80,14 +81,26 @@ export async function getHealthCheck() {
             const [hc_default, hc_fallback] = await Promise.all([hc_default_promise, hc_fallback_promise])
             
             if (hc_default !== null && hc_fallback !== null) {
-                await redis.lpush(HEALTH,JSON.stringify({
-                    hc_default,
-                    hc_fallback,
-                    time: new Date()
-                }))
+                //VALIDA O MELHOR LUGAR PARA REALIZAR O PROCESSAMENTO
+                const healthCheckServiceResult = healthCheckService({ hc_default, hc_fallback })
+
+                //GRAVA NO REDIS A ULTIMA CONSULTA FEITA
+                pipeline.lpush(HEALTH,JSON.stringify({ hc_default, hc_fallback, time: new Date()}))
+
+                //GRAVA NO REDIS O MELHOR LUGAR PARA PAROCESSA
+                pipeline.lpush(BEST_SERVICE,JSON.stringify(healthCheckServiceResult))
+
+                pipeline.exec()
+
             }else {
                 const newHc = {...healthParsed, time: new Date()}
-                await redis.lpush(HEALTH, JSON.stringify(newHc))
+
+                const healthCheckServiceResult = healthCheckService({ hc_default: healthParsed.hc_default, hc_fallback: healthParsed.hc_fallback })
+
+                pipeline.lpush(HEALTH, JSON.stringify(newHc))
+                pipeline.lpush(BEST_SERVICE,JSON.stringify(healthCheckServiceResult))
+
+                pipeline.exec()
             }
 
         }
@@ -110,5 +123,11 @@ export async function getHealthCheckDefault() {
         },
         time: new Date()
     } as HealthCheckDto
-    await redis.lpush(HEALTH,JSON.stringify(health))
+    const pipeline = redis.pipeline()
+    //GRAVA NO REDIS O MELHOR LUGAR PARA PAROCESSA
+    pipeline.lpush(BEST_SERVICE,JSON.stringify({process: 'DEFAULT', timeout: 5000}))
+
+    pipeline.lpush(HEALTH,JSON.stringify(health))
+
+    pipeline.exec()
 }

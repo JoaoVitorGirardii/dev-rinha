@@ -46,7 +46,7 @@ async function startWorkers() {
       } catch (err) {
         console.error('[Erro no getHealthCheck()]', err);
       }
-    }, 4000); //1s
+    }, 4000); //4s
   }
 
 }
