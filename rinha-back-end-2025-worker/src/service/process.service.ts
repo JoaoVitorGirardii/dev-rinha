@@ -67,7 +67,7 @@ export async function paymentsProcessService(payload: PaymentDto){
 
 async function paymentProcessed(payment: PaymentProcessorDto & { type: string }){
 
-    Database.query(
+    await Database.query(
         `INSERT INTO public.payments (correlationId, amount, "type", requested_at) 
             VALUES('${payment.correlationId}', ${payment.amount}, '${payment.type}', '${new Date(payment.requestedAt).toISOString()}')`
     );

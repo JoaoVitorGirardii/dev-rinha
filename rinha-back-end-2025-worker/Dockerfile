@@ -20,6 +20,8 @@ RUN npm install --only=production
 
 COPY --from=builder_worker /app/dist ./dist
 
+ENV NODE_ENV=production
+
 EXPOSE 3000
 
-CMD ["node", "--no-deprecation", "--optimize_for_size", "--max_old_space_size=512", "dist/server.js"]
+CMD ["node", "--no-experimental-fetch", "--no-deprecation", "--optimize_for_size", "--max_old_space_size=512", "dist/server.js"]
