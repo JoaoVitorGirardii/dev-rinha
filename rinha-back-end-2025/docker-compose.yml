@@ -1,5 +1,22 @@
 services:
-  
+  haproxy:
+    image: haproxy
+    container_name: haproxy
+    ports:
+      - "9999:9999"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - api1
+      - api2
+    networks:
+      - rinha-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.07'
+          memory: 30M
+
   redis:
     image: redis:alpine
     command: redis-server --save "" --appendonly no --maxmemory 10mb 
@@ -8,7 +25,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.14"
+          cpus: "0.07"
           memory: "10MB"
 
   db_postgres:
@@ -31,8 +48,8 @@ services:
         window: 5s
       resources:
         limits:
-          cpus: "0.25"
-          memory: "101MB"
+          cpus: "0.14"
+          memory: "100MB"
 
   apiworker1: &apiworker
     build: ../rinha-back-end-2025-worker
@@ -55,8 +72,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.07"
-          memory: "21MB"
+          cpus: "0.09"
+          memory: "23MB"
 
   apiworker2: &workers
     <<: *apiworker
@@ -79,7 +96,7 @@ services:
 
   apiworker5: 
     <<: *workers
-
+    
   apiworker6: 
     <<: *workers
 
@@ -103,34 +120,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.18"
-          memory: "26MB"
+          cpus: "0.34"
+          memory: "35MB"
   api2:
     <<: *api
     hostname: api2
-
-  api3:
-    <<: *api
-    hostname: api3
-
-  haproxy:
-    image: haproxy
-    container_name: haproxy
-    ports:
-      - "9999:9999"
-    volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    depends_on:
-      - api1
-      - api2
-      - api3
-    networks:
-      - rinha-network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.15'
-          memory: 35M
 
 networks:
   rinha-network:

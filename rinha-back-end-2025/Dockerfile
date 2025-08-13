@@ -21,6 +21,7 @@ RUN npm install --only=production
 COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
+ENV UV_THREADPOOL_SIZE=8
 
 EXPOSE 3000
 

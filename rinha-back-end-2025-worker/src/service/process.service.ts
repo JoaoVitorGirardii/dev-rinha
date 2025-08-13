@@ -39,7 +39,7 @@ export async function paymentsProcessService(payload: PaymentDto){
             if (!ok) {
                 await redis.lpush(QUEUE, JSON.stringify(payload))
             }else{
-                await paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
+                paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
             }
             
             return
@@ -51,7 +51,7 @@ export async function paymentsProcessService(payload: PaymentDto){
             if (!ok) {
                 await redis.lpush(QUEUE, JSON.stringify(payload))
             }else{
-                await paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
+                paymentProcessed({ ...payloadProcessor, type: 'DEFAULT' });
             }
 
             return
@@ -65,9 +65,9 @@ export async function paymentsProcessService(payload: PaymentDto){
     return 
 }
 
-async function paymentProcessed(payment: PaymentProcessorDto & { type: string }){
+function paymentProcessed(payment: PaymentProcessorDto & { type: string }){
 
-    await Database.query(
+    Database.query(
         `INSERT INTO public.payments (correlationId, amount, "type", requested_at) 
             VALUES('${payment.correlationId}', ${payment.amount}, '${payment.type}', '${new Date(payment.requestedAt).toISOString()}')`
     );

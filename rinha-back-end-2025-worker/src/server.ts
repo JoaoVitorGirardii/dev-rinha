@@ -4,7 +4,7 @@ import { getHealthCheck } from './service/healthCheck.service';
 import { paymentsProcessService } from './service/process.service';
 
 const QUEUE = 'payments';
-const CONCURRENCY = 10;
+const CONCURRENCY = 2;
 
 async function processOneWorker(id: number){
   while (true) {
