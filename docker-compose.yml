@@ -5,7 +5,7 @@ services:
     ports:
       - "9999:9999"
     volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./rinha-back-end-2025/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     depends_on:
       - api1
       - api2
@@ -37,7 +37,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=rinha
     volumes:
-      - ./createDb.sql:/docker-entrypoint-initdb.d/createDb.sql
+      - ./rinha-back-end-2025/createDb.sql:/docker-entrypoint-initdb.d/createDb.sql
     networks:
       - rinha-network
     deploy:
@@ -52,7 +52,8 @@ services:
           memory: "100MB"
 
   apiworker1: &apiworker
-    build: ../rinha-back-end-2025-worker
+    # build: ./rinha-back-end-2025-worker
+    image: joaovitorgirardiii/rinha-back-end-2025-worker:1.0.0
     hostname: apiworker
     depends_on:
       - redis
@@ -72,8 +73,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.09"
-          memory: "23MB"
+          cpus: "0.085"
+          memory: "20MB"
 
   apiworker2: &workers
     <<: *apiworker
@@ -100,9 +101,12 @@ services:
   apiworker6: 
     <<: *workers
 
+  apiworker7: 
+    <<: *workers
+
   api1: &api
-    build: .
-    #image:  joaovitorgirardiii/rinha-backend:latest
+    # build: ./rinha-back-end-2025
+    image:  joaovitorgirardiii/rinha-back-end-2025:1.0.0
     hostname: api1
     environment:
       - DB_USER=postgres
@@ -120,7 +124,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.34"
+          cpus: "0.30"
           memory: "35MB"
   api2:
     <<: *api
